@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Email megerősítés</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="auth-page">
+  <div class="auth-container">
+    <h1>Email megerősítés</h1>
+    <form id="verifyForm">
+      <p>Kérlek add meg az email címedre küldött 6 számjegyű kódot.</p>
+      <div class="form-group">
+        <label for="code">Megerősítő kód</label>
+        <input type="text" id="code" pattern="\d{6}" required>
+      </div>
+      <button type="submit" class="btn">Megerősítés</button>
+      <p id="message" class="message"></p>
+      <p class="auth-link"><a href="register.html">Vissza a regisztrációhoz</a></p>
+    </form>
+  </div>
+
+  <script>
+    document.getElementById('verifyForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const email = localStorage.getItem('pendingEmail');
+      const code = document.getElementById('code').value;
+      const messageEl = document.getElementById('message');
+      
+      if (!email) {
+        messageEl.textContent = 'Nincs folyamatban lévő regisztráció.';
+        messageEl.className = 'message error';
+        return;
+      }
+      
+      try {
+        const response = await fetch('/api/verify', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ email, code })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          // Sikeres aktiválás
+          localStorage.removeItem('pendingEmail');
+          messageEl.textContent = data.message;
+          messageEl.className = 'message success';
+          
+          // 2 másodperc után átirányítás a bejelentkezésre
+          setTimeout(() => {
+            window.location.href = 'login.html';
+          }, 2000);
+        } else {
+          messageEl.textContent = data.message;
+          messageEl.className = 'message error';
+        }
+      } catch (error) {
+        console.error('Hiba a kód ellenőrzése során:', error);
+        messageEl.textContent = 'Hiba történt a kód ellenőrzése során.';
+        messageEl.className = 'message error';
+      }
+    });
+  </script>
+</body>
+</html>

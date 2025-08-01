@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Multiplayer Kő-Papír-Olló</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+  <div class="game-container">
+    <header class="game-header">
+      <h1>Kő-Papír-Olló</h1>
+      <div class="room-info" id="roomInfo"></div>
+    </header>
+
+    <main class="game-content">
+      <!-- Kezdőképernyő -->
+      <div class="start-screen" id="start">
+        <div class="input-group">
+          <input type="text" id="room" placeholder="Szoba neve" class="input-field">
+          <button onclick="joinGame()" class="btn btn-primary">Csatlakozás</button>
+        </div>
+      </div>
+
+      <!-- Játék képernyő -->
+      <div class="game-screen" id="game" style="display:none;">
+        <h2>Válassz!</h2>
+        <div class="choices">
+          <button onclick="sendChoice('kő')" class="choice-btn rock-btn">
+            <span class="icon">🪨</span>
+            <span>Kő</span>
+          </button>
+          <button onclick="sendChoice('papír')" class="choice-btn paper-btn">
+            <span class="icon">📄</span>
+            <span>Papír</span>
+          </button>
+          <button onclick="sendChoice('olló')" class="choice-btn scissors-btn">
+            <span class="icon">✂️</span>
+            <span>Olló</span>
+          </button>
+        </div>
+        <div class="timer-container">
+          <div class="timer-bar" id="timerBar"></div>
+          <p class="status-text" id="status">Várakozás az ellenfélre...</p>
+        </div>
+      </div>
+
+      <!-- Eredmény képernyő -->
+      <div class="result-screen" id="result" style="display:none;">
+        <div class="result-content">
+          <h2>Eredmény</h2>
+          <p class="result-text" id="resultText"></p>
+          <div class="scoreboard" id="scoreboard"></div>
+          <div class="action-buttons">
+            <button id="rematchBtn" class="btn btn-secondary">Új játék</button>
+            <button id="exitBtn" class="btn btn-danger">Kilépés</button>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="game-footer">
+      <p>Multiplayer Kő-Papír-Olló Játék</p>
+    </footer>
+  </div>
+
+  <script>
+    // Itt marad a meglévő JavaScript kódod
+    const socket = io();
+    let roomId = '';
+    let timeLeft = 30;
+    let countdownInterval;
+
+    function joinGame() {
+      roomId = document.getElementById('room').value.trim();
+      if (roomId) {
+        socket.emit('joinGame', roomId);
+        document.getElementById('start').style.display = 'none';
+        document.getElementById('game').style.display = 'block';
+        document.getElementById('roomInfo').textContent = `Szoba: ${roomId}`;
+      }
+    }
+
+    function sendChoice(choice) {
+      socket.emit('choice', { roomId, choice });
+      disableButtons();
+      document.getElementById('status').textContent = `Választottál: ${choice}. Várunk az ellenfélre...`;
+    }
+
+    function disableButtons() {
+      document.querySelectorAll('.choice-btn').forEach(btn => btn.disabled = true);
+    }
+
+    function enableButtons() {
+      document.querySelectorAll('.choice-btn').forEach(btn => btn.disabled = false);
+    }
+
+    function startCountdown() {
+      timeLeft = 30;
+      document.getElementById('timerBar').style.width = '100%';
+      document.getElementById('status').textContent = `Idő a választásra: ${timeLeft} másodperc`;
+      countdownInterval = setInterval(() => {
+        timeLeft--;
+        document.getElementById('timerBar').style.width = `${(timeLeft / 30) * 100}%`;
+        document.getElementById('status').textContent = `Idő a választásra: ${timeLeft} másodperc`;
+        if (timeLeft <= 0) {
+          clearInterval(countdownInterval);
+          disableButtons();
+        }
+      }, 1000);
+    }
+
+  socket.on('startGame', () => {
+    document.getElementById('status').textContent = 'Játék indul!';
+  });
+
+  socket.on('new-round', () => {
+    document.getElementById('result').style.display = 'none';
+    document.getElementById('game').style.display = 'block';
+    enableButtons();
+    startCountdown();
+  });
+
+  socket.on('result', (data) => {
+    clearInterval(countdownInterval);
+    document.getElementById('game').style.display = 'none';
+    document.getElementById('result').style.display = 'block';
+    document.getElementById('resultText').textContent =
+      `Te: ${data.yourChoice} | Ellenfél: ${data.opponentChoice} → ${data.outcome}`;
+    document.getElementById('scoreboard').textContent =
+      `Pontszám: Te ${data.yourScore} - ${data.opponentScore} Ellenfél`;
+    document.getElementById('rematchBtn').disabled = true;
+  });
+
+  socket.on('game-over', () => {
+    document.getElementById('rematchBtn').disabled = false;
+    document.getElementById('status').textContent = 'A játék véget ért.';
+  });
+
+  socket.on('rematch-start', () => {
+    document.getElementById('result').style.display = 'none';
+    document.getElementById('game').style.display = 'block';
+    enableButtons();
+    startCountdown();
+  });
+
+  socket.on('opponent-left', () => {
+    alert('Az ellenfeled kilépett 😢');
+    location.reload();
+  });
+
+  document.getElementById('rematchBtn').addEventListener('click', () => {
+    socket.emit('play-again', roomId);
+    document.getElementById('resultText').textContent = 'Várakozás az ellenfélre...';
+    document.getElementById('rematchBtn').disabled = true;
+  });
+
+  document.getElementById('exitBtn').addEventListener('click', () => {
+    socket.emit('leave-room', roomId);
+    location.reload();
+  });
+</script>
+
+</body>
+</html>

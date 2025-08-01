@@ -1,0 +1,52 @@
+{
+  "name": "ko-papir-ollo",
+  "version": "1.0.0",
+  "description": "Online kő-papír-olló játék Electron alkalmazásban",
+  "main": "main.js",
+  "scripts": {
+    "start": "node server.js",
+    "app": "electron .",
+    "start-all": "concurrently \"npm run start\" \"npm run app\"",
+    "dist": "electron-builder"
+  },
+  "author": "Te Neved",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.0",
+    "electron": "^26.2.0",
+    "electron-builder": "^24.6.0"
+  },
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "body-parser": "^2.2.0",
+    "dotenv": "^17.2.1",
+    "express": "^4.21.2",
+    "mysql2": "^3.14.3",
+    "nodemailer": "^7.0.5",
+    "socket.io": "^4.8.1"
+  },
+  "build": {
+    "appId": "com.te.neved.kopapirollo",
+    "productName": "KoPapirOllo",
+    "files": [
+      "public/**/*",
+      "server.js",
+      "main.js",
+      "start.js"
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowElevation": true,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "KoPapirOllo"
+    }
+  }
+}

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Regisztráció</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="auth-page">
+  <div class="auth-container">
+    <h1>Regisztráció</h1>
+    <form id="registerForm">
+      <div class="form-group">
+        <label for="email">Email cím</label>
+        <input type="email" id="email" required>
+      </div>
+      <div class="form-group">
+        <label for="password">Jelszó</label>
+        <input type="password" id="password" required>
+      </div>
+      <div class="form-group">
+        <label for="confirmPassword">Jelszó újra</label>
+        <input type="password" id="confirmPassword" required>
+      </div>
+      <div class="form-group">
+        <label class="checkbox-label">
+          <input type="checkbox" id="showPassword"> Jelszó megjelenítése
+        </label>
+      </div>
+      <button type="submit" class="btn">Regisztráció</button>
+      <p id="message" class="message"></p>
+      <p class="auth-link">Már van fiókod? <a href="login.html">Jelentkezz be!</a></p>
+    </form>
+  </div>
+
+  <script>
+    document.getElementById('showPassword').addEventListener('change', function() {
+      const passwordField = document.getElementById('password');
+      const confirmField = document.getElementById('confirmPassword');
+      const type = this.checked ? 'text' : 'password';
+      passwordField.type = type;
+      confirmField.type = type;
+    });
+
+    document.getElementById('registerForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const confirmPassword = document.getElementById('confirmPassword').value;
+      const messageEl = document.getElementById('message');
+      
+      // Validáció
+      if (password !== confirmPassword) {
+        messageEl.textContent = 'A jelszavak nem egyeznek!';
+        messageEl.className = 'message error';
+        return;
+      }
+      
+      if (password.length < 8) {
+        messageEl.textContent = 'A jelszónak legalább 8 karakter hosszúnak kell lennie!';
+        messageEl.className = 'message error';
+        return;
+      }
+      
+      try {
+        const response = await fetch('/api/register', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ email, password })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          // Sikeres regisztráció, átirányítás a kód ellenőrzésre
+          localStorage.setItem('pendingEmail', email);
+          window.location.href = 'verify.html';
+        } else {
+          messageEl.textContent = data.message;
+          messageEl.className = 'message error';
+        }
+      } catch (error) {
+        console.error('Hiba a regisztráció során:', error);
+        messageEl.textContent = 'Hiba történt a regisztráció során.';
+        messageEl.className = 'message error';
+      }
+    });
+  </script>
+</body>
+</html>
