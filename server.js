@@ -6,21 +6,30 @@ const bcrypt = require('bcrypt');
 const bodyParser = require('body-parser');
 const path = require('path');
 const nodemailer = require('nodemailer');
+const { Pool } = require('pg');
 require('dotenv').config();
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server);
+const io = new Server(server, {
+  cors: {
+    origin: ["https://your-app.onrender.com", "http://localhost:3000"],
+    methods: ["GET", "POST"]
+  }
+});
 
-// MySQL kapcsolat létrehozása
-const pool = mysql.createPool({
-  host: 'localhost',
-  user: 'root',
-  password: '',
-  database: 'rps',
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
+// Ellenőrizd a socket kapcsolatot
+io.on('connection', (socket) => {
+  console.log('✅ Új kapcsolat:', socket.id);
+  
+  socket.on('joinGame', (roomId) => {
+    console.log(`🏠 ${socket.id} csatlakozott a ${roomId} szobához`);
+  });
+});
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false }
 });
 
 // Middleware-ek
