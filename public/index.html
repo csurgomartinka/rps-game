@@ -10,9 +10,14 @@
 <body>
   <div class="game-container">
     <header class="game-header">
-      <h1>Kő-Papír-Olló</h1>
-      <div class="room-info" id="roomInfo"></div>
-    </header>
+  <div class="user-info">
+    <span id="usernameDisplay"></span>
+    <button id="logoutBtn" class="btn-logout">Kilépés</button>
+    <button id="menuBtn" class="btn-menu">Főmenü</button>
+  </div>
+  <h1>Kő-Papír-Olló</h1>
+  <div class="room-info" id="roomInfo"></div>
+</header>
 
     <main class="game-content">
       <!-- Kezdőképernyő -->
@@ -76,6 +81,27 @@
     if (!user) {
       window.location.href = 'login.html';
     }
+
+    // Felhasználó adatok betöltése
+    document.addEventListener('DOMContentLoaded', function() {
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (user && user.email) {
+      document.getElementById('usernameDisplay').textContent = user.email;
+    } else {
+      window.location.href = 'login.html';
+    }
+  });
+
+  // Kilépés gomb
+  document.getElementById('logoutBtn').addEventListener('click', function() {
+    localStorage.removeItem('user');
+    window.location.href = 'login.html';
+  });
+
+  // Főmenü gomb
+  document.getElementById('menuBtn').addEventListener('click', function() {
+    window.location.href = 'menu.html';
+  });
 
     function joinGame() {
       roomId = document.getElementById('room').value.trim();

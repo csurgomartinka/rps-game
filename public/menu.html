@@ -8,20 +8,29 @@
 </head>
 <body class="menu-page">
   <div class="menu-container">
+    <div class="user-welcome">
+      <h2>Üdvözöllek, <span id="userEmail"></span>!</h2>
+      <button id="logoutBtn" class="btn-logout">Kijelentkezés</button>
+    </div>
+    
     <h1>Kő-Papír-Olló</h1>
     <div class="menu-options">
-      <a href="index.html" class="menu-btn">Játék indítása</a>
-      <button id="logoutBtn" class="menu-btn">Kijelentkezés</button>
+      <a href="/game" class="menu-btn">Játék indítása</a>
+      <a href="profile.html" class="menu-btn">Profil beállítások</a>
+      <a href="leaderboard.html" class="menu-btn">Ranglista</a>
     </div>
   </div>
 
   <script>
-    // Ellenőrizzük, hogy be van-e jelentkezve a felhasználó
-    const user = localStorage.getItem('user');
+    // Felhasználó adatok betöltése
+    const user = JSON.parse(localStorage.getItem('user'));
     if (!user) {
       window.location.href = 'login.html';
+    } else {
+      document.getElementById('userEmail').textContent = user.email;
     }
 
+    // Kijelentkezés
     document.getElementById('logoutBtn').addEventListener('click', function() {
       localStorage.removeItem('user');
       window.location.href = 'login.html';

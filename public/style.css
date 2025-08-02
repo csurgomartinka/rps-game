@@ -205,6 +205,63 @@ body {
   color: rgba(255,255,255,0.7);
 }
 
+/* Új stílusok */
+.user-info {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.btn-logout, .btn-menu {
+  padding: 8px 15px;
+  border: none;
+  border-radius: 5px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-logout {
+  background: #f44336;
+  color: white;
+}
+
+.btn-menu {
+  background: #2196F3;
+  color: white;
+}
+
+.btn-logout:hover, .btn-menu:hover {
+  opacity: 0.9;
+}
+
+.auth-links {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+.btn-resend {
+  background: none;
+  border: none;
+  color: #2196F3;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* Reszponzív design */
+@media (max-width: 600px) {
+  .user-info {
+    position: static;
+    justify-content: center;
+    margin-bottom: 15px;
+  }
+}
+
+
 /* Reszponzív design */
 @media (max-width: 600px) {
   .choices {
