@@ -112,10 +112,13 @@ app.post('/api/register', async (req, res) => {
   try {
     const { email, password } = req.body;
     
-    // Ellenőrizzük, hogy létezik-e már a felhasználó
-    const [existingUsers] = await pool.query('SELECT * FROM felhasznalok WHERE email = ?', [email]);
+    // Módosított SQL lekérdezés - PostgreSQL kompatibilis szintaxis
+    const existingUsers = await pool.query(
+      'SELECT * FROM felhasznalok WHERE email = $1', 
+      [email]
+    );
     
-    if (existingUsers.length > 0) {
+    if (existingUsers.rows.length > 0) {
       return res.status(400).json({ success: false, message: 'Ez az email cím már regisztrálva van.' });
     }
     
@@ -125,8 +128,8 @@ app.post('/api/register', async (req, res) => {
     
     // Felhasználó mentése az adatbázisba
     await pool.query(
-      'INSERT INTO felhasznalok (email, jelszo, kod, aktivalt) VALUES (?, ?, ?, 0)',
-      [email, hashedPassword, verificationCode]
+      'INSERT INTO felhasznalok (email, jelszo, kod, aktivalt) VALUES ($1, $2, $3, $4)',
+      [email, hashedPassword, verificationCode, false]
     );
     
     // Email küldése
@@ -154,19 +157,19 @@ app.post('/api/verify', async (req, res) => {
   try {
     const { email, code } = req.body;
     
-    // Ellenőrizzük a kódot
-    const [users] = await pool.query(
-      'SELECT * FROM felhasznalok WHERE email = ? AND kod = ?',
+    // Módosított SELECT parancs
+    const users = await pool.query(
+      'SELECT * FROM felhasznalok WHERE email = $1 AND kod = $2',
       [email, code]
     );
     
-    if (users.length === 0) {
+    if (users.rows.length === 0) {
       return res.status(400).json({ success: false, message: 'Hibás kód vagy email cím.' });
     }
     
     // Aktiváljuk a felhasználót
     await pool.query(
-      'UPDATE felhasznalok SET aktivalt = 1, kod = NULL WHERE email = ?',
+      'UPDATE felhasznalok SET aktivalt = true, kod = NULL WHERE email = $1',
       [email]
     );
     
@@ -185,23 +188,23 @@ app.post('/api/login', async (req, res) => {
   try {
     const { email, password } = req.body;
     
-    // Felhasználó keresése
-    const [users] = await pool.query('SELECT * FROM felhasznalok WHERE email = ?', [email]);
+    // Módosított SELECT parancs
+    const users = await pool.query(
+      'SELECT * FROM felhasznalok WHERE email = $1', 
+      [email]
+    );
     
-    if (users.length === 0) {
+    if (users.rows.length === 0) {
       return res.status(401).json({ success: false, message: 'Hibás email cím vagy jelszó.' });
     }
     
-    const user = users[0];
-    
-    // Jelszó ellenőrzése
+    const user = users.rows[0];
     const passwordMatch = await bcrypt.compare(password, user.jelszo);
     
     if (!passwordMatch) {
       return res.status(401).json({ success: false, message: 'Hibás email cím vagy jelszó.' });
     }
     
-    // Ellenőrizzük, hogy aktivált-e a fiók
     if (!user.aktivalt) {
       return res.status(403).json({ 
         success: false, 
