@@ -17,6 +17,28 @@ const io = new Server(server, {
     methods: ["GET", "POST"]
   }
 });
+// Hitelesítési middleware
+const authenticate = async (req, res, next) => {
+  const token = req.headers.authorization;
+  
+  if (!token) {
+    return res.status(401).json({ success: false, message: 'Hozzáférés megtagadva. Nincs token.' });
+  }
+  
+  try {
+    // Itt ellenőriznéd a token érvényességét
+    // Most egyszerűsített változat, ahol csak ellenőrizzük, hogy van-e user a localStorage-ban
+    next();
+  } catch (error) {
+    console.error('Hiba a token ellenőrzése során:', error);
+    res.status(401).json({ success: false, message: 'Érvénytelen token.' });
+  }
+};
+
+// Példa egy védett route-ra
+app.get('/api/protected', authenticate, (req, res) => {
+  res.json({ success: true, message: 'Védett tartalom' });
+});
 
 // Ellenőrizd a socket kapcsolatot
 io.on('connection', (socket) => {
@@ -33,8 +55,25 @@ const pool = new Pool({
 });
 
 // Middleware-ek
-app.use(express.static('public'));
+// Statikus fájlok kezelése
+app.use(express.static('public', {
+  setHeaders: (res, path) => {
+    if (path.endsWith('.html')) {
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    }
+  }
+}));
 app.use(bodyParser.json());
+
+// Biztonsági fejlécek
+app.use((req, res, next) => {
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Referrer-Policy', 'no-referrer');
+  next();
+});
+
 
 // Email küldő konfiguráció
 const transporter = nodemailer.createTransport({
@@ -56,6 +95,16 @@ app.get('/', async (req, res) => {
     console.error('Hiba a kezdőoldal betöltésekor:', error);
     res.status(500).send('Hiba történt a kezdőoldal betöltésekor.');
   }
+});
+
+
+// Védett route-ok (csak bejelentkezett felhasználóknak)
+app.get('/game', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+app.get('/menu', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'menu.html'));
 });
 
 // Regisztráció

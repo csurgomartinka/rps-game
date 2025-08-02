@@ -72,6 +72,11 @@
     let timeLeft = 30;
     let countdownInterval;
 
+    const user = localStorage.getItem('user');
+    if (!user) {
+      window.location.href = 'login.html';
+    }
+
     function joinGame() {
       roomId = document.getElementById('room').value.trim();
       if (roomId) {
