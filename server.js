@@ -250,6 +250,34 @@ io.on('connection', (socket) => {
     }
   });
 
+  socket.on('result', (data) => {
+  clearInterval(countdownInterval);
+  document.getElementById('game').style.display = 'none';
+  document.getElementById('result').style.display = 'block';
+  document.getElementById('actionButtons').style.display = 'none'; // Elrejtjük a gombokat
+  
+  document.getElementById('resultText').textContent =
+    `Te: ${data.yourChoice} | Ellenfél: ${data.opponentChoice} → ${data.outcome}`;
+  document.getElementById('scoreboard').textContent =
+    `Pontszám: Te ${data.yourScore} - ${data.opponentScore} Ellenfél`;
+});
+
+// Játék vége esetén
+socket.on('game-over', () => {
+  document.getElementById('actionButtons').style.display = 'flex'; // Megjelenítjük a gombokat
+  document.getElementById('rematchBtn').disabled = false;
+  document.getElementById('status').textContent = 'A játék véget ért.';
+});
+
+// Új játék indításakor
+socket.on('rematch-start', () => {
+  document.getElementById('result').style.display = 'none';
+  document.getElementById('game').style.display = 'block';
+  document.getElementById('actionButtons').style.display = 'none'; // Elrejtjük a gombokat
+  enableButtons();
+  startCountdown();
+});
+
   socket.on('choice', ({ roomId, choice }) => {
     const room = rooms[roomId];
     if (!room) return;
