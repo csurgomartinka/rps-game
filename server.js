@@ -267,6 +267,13 @@ socket.on('game-over', () => {
   document.getElementById('actionButtons').style.display = 'flex'; // Megjelenítjük a gombokat
   document.getElementById('rematchBtn').disabled = false;
   document.getElementById('status').textContent = 'A játék véget ért.';
+
+  document.getElementById('exitBtn').addEventListener('click', function() {
+  if (confirm('Biztosan ki akarsz lépni a játékból?')) {
+    socket.emit('leave-room', roomId);
+    window.location.href = 'menu.html';
+  }
+});
 });
 
 // Új játék indításakor
