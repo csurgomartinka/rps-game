@@ -153,21 +153,35 @@
     startCountdown();
   });
 
-  socket.on('result', (data) => {
-    clearInterval(countdownInterval);
-    document.getElementById('game').style.display = 'none';
-    document.getElementById('result').style.display = 'block';
+  // Az eredmény megjelenítésekor
+socket.on('result', (data) => {
+  clearInterval(countdownInterval);
+  document.getElementById('game').style.display = 'none';
+  document.getElementById('result').style.display = 'block';
+  
+  // Mindig elrejtjük a gombokat, majd a game-over esetén megjelenítjük
+  document.getElementById('actionButtons').style.display = 'none';
+  
+  document.getElementById('resultText').textContent =
+    `Te: ${data.yourChoice} | Ellenfél: ${data.opponentChoice} → ${data.outcome}`;
+  document.getElementById('scoreboard').textContent =
+    `Pontszám: Te ${data.yourScore} - ${data.opponentScore} Ellenfél`;
+});
+
+// Játék vége esetén
+socket.on('game-over', (data) => {
+  // Most már megjelenítjük a gombokat
+  document.getElementById('actionButtons').style.display = 'flex';
+  document.getElementById('rematchBtn').disabled = false;
+  
+  // Frissítjük az eredményt, ha van adat
+  if (data) {
     document.getElementById('resultText').textContent =
       `Te: ${data.yourChoice} | Ellenfél: ${data.opponentChoice} → ${data.outcome}`;
     document.getElementById('scoreboard').textContent =
-      `Pontszám: Te ${data.yourScore} - ${data.opponentScore} Ellenfél`;
-    document.getElementById('rematchBtn').disabled = true;
-  });
-
-  socket.on('game-over', () => {
-    document.getElementById('rematchBtn').disabled = false;
-    document.getElementById('status').textContent = 'A játék véget ért.';
-  });
+      `Végeredmény: Te ${data.yourScore} - ${data.opponentScore} Ellenfél`;
+  }
+});
 
   socket.on('rematch-start', () => {
     document.getElementById('result').style.display = 'none';

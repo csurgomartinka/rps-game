@@ -372,26 +372,32 @@ function checkChoices(roomId) {
     if (result === 1) room.scores[id1]++;
     if (result === -1) room.scores[id2]++;
 
-    // Eredmény küldése
-    io.to(id1).emit('result', {
+    // Eredmény adatok előkészítése
+    const resultData1 = {
       yourChoice: p1.choice,
       opponentChoice: p2.choice,
       outcome: getOutcomeText(result),
       yourScore: room.scores[id1],
       opponentScore: room.scores[id2]
-    });
+    };
 
-    io.to(id2).emit('result', {
+    const resultData2 = {
       yourChoice: p2.choice,
       opponentChoice: p1.choice,
       outcome: getOutcomeText(-result),
       yourScore: room.scores[id2],
       opponentScore: room.scores[id1]
-    });
+    };
+
+    // Eredmény küldése
+    io.to(id1).emit('result', resultData1);
+    io.to(id2).emit('result', resultData2);
 
     // Játék vége?
     if (room.scores[id1] === 3 || room.scores[id2] === 3) {
-      io.to(roomId).emit('game-over');
+      // Játék végén újra elküldjük az eredményt a gombok megjelenítéséhez
+      io.to(id1).emit('game-over', resultData1);
+      io.to(id2).emit('game-over', resultData2);
     } else {
       // Új kör 5 másodperc múlva
       setTimeout(() => startRound(roomId), 5000);
